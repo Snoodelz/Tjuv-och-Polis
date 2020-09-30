@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading;
 
 namespace Tjuv_och_Polis
@@ -10,6 +9,8 @@ namespace Tjuv_och_Polis
     {
         static int yAxisLength = 25;
         static int xAxisLength = 100;
+        static int arrestedThiefs = 0;
+        static int robbedCitizens = 0;
         static List<Person> people = new List<Person>();
         static List<Thief> prison = new List<Thief>();
 
@@ -111,8 +112,9 @@ namespace Tjuv_och_Polis
             {
                 Console.WriteLine("\n" + meet);
                 Thread.Sleep(2000);
-
             }
+            Console.WriteLine("Antal rånade medborgare: " + robbedCitizens);
+            Console.WriteLine("Antal gripna tjuvar: " + arrestedThiefs);
         }
 
         static string Meet(Person p1, Person p2)
@@ -122,7 +124,8 @@ namespace Tjuv_och_Polis
 
             if (p1 is Thief && p2 is Citizen)
             {
-                var itemIndex = rnd.Next(0, ((Citizen)p2).Belongings.Count);
+                robbedCitizens++;
+                var itemIndex = rnd.Next(0, ((Citizen)p2).Belongings.Count -1);
                 ((Thief)p1).StolenGoods.Add(((Citizen)p2).Belongings[itemIndex]);
                 result = "Tjuven rånar medborgaren på " + ((Citizen)p2).Belongings[itemIndex].Name;
 
@@ -130,7 +133,8 @@ namespace Tjuv_och_Polis
             }
             else if (p1 is Citizen && p2 is Thief)
             {
-                var itemIndex = rnd.Next(0, ((Citizen)p1).Belongings.Count);
+                robbedCitizens++;
+                var itemIndex = rnd.Next(0, ((Citizen)p1).Belongings.Count -1);
                 ((Thief)p2).StolenGoods.Add(((Citizen)p1).Belongings[itemIndex]);
                 result = "Tjuven rånar medborgaren på " + ((Citizen)p1).Belongings[itemIndex].Name;
 
@@ -140,7 +144,7 @@ namespace Tjuv_och_Polis
             else if (p1 is Thief && p2 is Police || p1 is Police && p2 is Thief)
             {
                 result = "Polisen konfiskerar tjuvens stöldgods";
-
+                arrestedThiefs++;
                 if (p1 is Police)
                 {
                     ((Police)p1).Confiscated.AddRange(((Thief)p2).StolenGoods);
