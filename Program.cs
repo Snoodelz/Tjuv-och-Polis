@@ -20,6 +20,11 @@ namespace Tjuv_och_Polis
 
         static void Main(string[] args)
         {
+            SimulationStart();
+        }
+
+        static void SimulationStart()
+        {
             CreatePlayers(30, 20, 10);
 
             while (true)
@@ -33,12 +38,8 @@ namespace Tjuv_och_Polis
                 DrawGame();
 
 
-
                 Thread.Sleep(500);
             }
-
-
-
         }
 
         static void CreatePlayers(int citizen, int thief, int police)
