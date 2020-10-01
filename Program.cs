@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.Tracing;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 
 namespace Tjuv_och_Polis
 {
     class Program
     {
+        static Random random = new Random();
         static int yAxisLength = 25;
         static int xAxisLength = 100;
         static int arrestedThiefs = 0;
@@ -115,52 +119,67 @@ namespace Tjuv_och_Polis
             }
             Console.WriteLine("Antal rånade medborgare: " + robbedCitizens);
             Console.WriteLine("Antal gripna tjuvar: " + arrestedThiefs);
+            Console.Write("Antal fångar: " + prison.Count);
+            for (int i = 0; i < prison.Count; i++)
+            {
+                Console.Write($" Fånge {i + 1}: {prison[i].timeInJail}s");
+            }
+            Console.WriteLine();
         }
 
         static string Meet(Person p1, Person p2)
         {
             string result = "";
-            Random rnd = new Random();
 
             if (p1 is Thief && p2 is Citizen)
             {
-                robbedCitizens++;
-                var itemIndex = rnd.Next(0, ((Citizen)p2).Belongings.Count -1);
-                ((Thief)p1).StolenGoods.Add(((Citizen)p2).Belongings[itemIndex]);
-                result = "Tjuven rånar medborgaren på " + ((Citizen)p2).Belongings[itemIndex].Name;
-
-                ((Citizen)p2).Belongings.RemoveAt(itemIndex);
+                result = RobCitizen((Citizen)p2, (Thief)p1);
             }
             else if (p1 is Citizen && p2 is Thief)
             {
-                robbedCitizens++;
-                var itemIndex = rnd.Next(0, ((Citizen)p1).Belongings.Count -1);
-                ((Thief)p2).StolenGoods.Add(((Citizen)p1).Belongings[itemIndex]);
-                result = "Tjuven rånar medborgaren på " + ((Citizen)p1).Belongings[itemIndex].Name;
-
-                ((Citizen)p1).Belongings.RemoveAt(itemIndex);
-
+                result = RobCitizen((Citizen)p1, (Thief)p2);
             }
-            else if (p1 is Thief && p2 is Police || p1 is Police && p2 is Thief)
+            else if (p1 is Thief && p2 is Police)
             {
-                result = "Polisen konfiskerar tjuvens stöldgods";
-                arrestedThiefs++;
-                if (p1 is Police)
-                {
-                    ((Police)p1).Confiscated.AddRange(((Thief)p2).StolenGoods);
-                    ((Thief)p2).StolenGoods.Clear();
-
-                    //
-                    prison.Add((Thief)p2);
-                }
-                else
-                {
-                    ((Police)p2).Confiscated.AddRange(((Thief)p1).StolenGoods);
-                    ((Thief)p1).StolenGoods.Clear();
-
-                    prison.Add((Thief)p1);
-                }
+                result = ArrestThief((Thief)p1, (Police)p2);
             }
+            else if (p1 is Police && p2 is Thief)
+            {
+                result = ArrestThief((Thief)p2, (Police)p1);
+            }
+                
+
+            return result;
+        }
+
+        static string RobCitizen(Citizen citizen, Thief thief)
+        {
+            string result = "Tjuven ser inget av värde att råna av medborgaren";
+            
+            // kollar om medborgaren har något att råna
+            if(citizen.Belongings.Count > 0)
+            {
+                robbedCitizens++;
+                var itemIndex = random.Next(0, citizen.Belongings.Count);
+                thief.StolenGoods.Add(citizen.Belongings[itemIndex]);
+                result = "Tjuven rånar medborgaren på " + citizen.Belongings[itemIndex].Name;
+                citizen.Belongings.RemoveAt(itemIndex);
+            }
+            
+            return result;
+        }
+        
+        
+        static string ArrestThief(Thief thief, Police police)
+        {
+            string result = "Polisen konfiskerar tjuvens stöldgods";
+            arrestedThiefs++;
+
+
+            police.Confiscated.AddRange(thief.StolenGoods);
+            thief.StolenGoods.Clear();
+
+            prison.Add(thief);
 
             return result;
         }
